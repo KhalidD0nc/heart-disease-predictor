@@ -1,0 +1,126 @@
+# Hearty AI - Heart Disease Predictor
+
+A beautiful, interactive web application for heart disease prediction using machine learning.
+
+## Features
+
+- 🎨 Modern, gradient-based UI with beautiful animations
+- 🤖 AI-powered heart health predictions using your trained model
+- 📱 Responsive design that works on all devices
+- ⚡ Real-time form validation and interactive feedback
+- 🎯 Personalized recommendations based on risk factors
+- 🔒 Privacy-focused - all data stays on your device
+
+## Getting Started
+
+### Prerequisites
+
+- Python 3.7 or higher
+- pip (Python package installer)
+
+### Installation
+
+1. Create and activate a virtual environment:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+2. Install the required Python packages:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Make sure your `model.pkl` file is in the same directory as `app.py`
+
+### Running the Application
+
+1. Activate the virtual environment (if not already activated):
+   ```bash
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+2. Start the Flask server:
+   ```bash
+   python3 app.py
+   ```
+
+3. Open your web browser and navigate to:
+   ```
+   http://localhost:8080
+   ```
+
+3. Fill out the health assessment form and get your personalized heart health prediction!
+
+## Usage
+
+1. **Enter Health Information**: Fill out all the required fields in the health assessment form
+2. **Get Prediction**: Click "Analyze Heart Health" to get your AI-powered prediction
+3. **View Results**: See your risk score, detailed analysis, and personalized recommendations
+4. **Follow Recommendations**: Use the provided health recommendations to improve your cardiovascular health
+
+## Health Parameters
+
+The application analyzes the following health parameters:
+
+- **Age**: Your current age
+- **Sex**: Biological sex (male/female)
+- **Chest Pain Type**: Type of chest pain experienced
+- **Resting Blood Pressure**: Blood pressure at rest
+- **Cholesterol Level**: Serum cholesterol level
+- **Fasting Blood Sugar**: Whether fasting blood sugar > 120 mg/dl
+- **Resting ECG**: Results of resting electrocardiogram
+- **Maximum Heart Rate**: Maximum heart rate achieved during exercise
+- **Exercise Induced Angina**: Whether exercise induces chest pain
+- **ST Depression**: ST depression induced by exercise
+- **ST Slope**: Slope of peak exercise ST segment
+- **Major Vessels**: Number of major vessels colored by fluoroscopy
+- **Thalassemia**: Type of thalassemia
+
+## Technical Details
+
+- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
+- **Backend**: Flask (Python)
+- **Machine Learning**: Scikit-learn compatible model
+- **Styling**: Custom CSS with gradient animations
+- **Icons**: Font Awesome
+
+## Model Information
+
+The application uses your pre-trained `model.pkl` file. The model should be trained on the Cleveland Heart Disease dataset or similar with the following features in order:
+
+1. age
+2. sex
+3. cp (chest pain type)
+4. trestbps (resting blood pressure)
+5. chol (cholesterol)
+6. fbs (fasting blood sugar)
+7. restecg (resting ECG)
+8. thalach (max heart rate)
+9. exang (exercise induced angina)
+10. oldpeak (ST depression)
+11. slope (ST slope)
+12. ca (number of major vessels)
+13. thal (thalassemia)
+
+## Disclaimer
+
+⚠️ **Important**: This application is for educational and demonstration purposes only. It should not be used as a substitute for professional medical advice, diagnosis, or treatment. Always consult with a qualified healthcare provider for medical concerns.
+
+## Color Scheme
+
+The application uses a beautiful gradient color scheme:
+
+- **Primary Gradient**: Purple to violet (`#667eea` to `#764ba2`)
+- **Secondary Gradient**: Pink to red (`#f093fb` to `#f5576c`)
+- **Tertiary Gradient**: Blue to cyan (`#4facfe` to `#00f2fe`)
+- **Success Gradient**: Green to teal (`#43e97b` to `#38f9d7`)
+- **Background**: Dark navy (`#0a0e27`)
+
+## Contributing
+
+Feel free to submit issues and enhancement requests!
+
+## License
+
+This project is for educational purposes. Please ensure you have appropriate rights to use any included machine learning models.

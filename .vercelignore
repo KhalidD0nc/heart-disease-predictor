@@ -1,0 +1,10 @@
+venv/
+__pycache__/
+*.pyc
+.git/
+.DS_Store
+model.pkl
+app.py
+build.sh
+package.json
+requirements-vercel.txt

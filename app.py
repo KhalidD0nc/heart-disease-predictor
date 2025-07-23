@@ -59,11 +59,11 @@ def predict():
         # Get data from request
         data = request.json
         
-        # Feature names (adjust based on your model's expected features)
+        # Feature names (matching your dataset structure)
         feature_names = [
-            'age', 'sex', 'cp', 'trestbps', 'chol', 
-            'fbs', 'restecg', 'thalach', 'exang', 
-            'oldpeak', 'slope', 'ca', 'thal'
+            'Age', 'Sex', 'ChestPainType', 'RestingBP', 'Cholesterol', 
+            'FastingBS', 'RestingECG', 'MaxHR', 'ExerciseAngina', 
+            'Oldpeak', 'ST_Slope'
         ]
         
         # Extract features in the correct order

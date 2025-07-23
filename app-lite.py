@@ -8,64 +8,89 @@ CORS(app)
 
 # Simplified prediction without heavy ML dependencies
 def simple_heart_prediction(data):
-    """Lightweight prediction algorithm"""
+    """Lightweight prediction algorithm matching your dataset structure"""
     risk_score = 0
     risk_factors = []
     
     # Age factor
-    age = float(data.get('age', 0))
+    age = float(data.get('Age', 0))
     if age > 65:
         risk_score += 15
         risk_factors.append("Advanced age")
     elif age > 50:
         risk_score += 8
     
-    # Sex factor
-    if float(data.get('sex', 0)) == 1:
+    # Sex factor (males generally higher risk)
+    if data.get('Sex') == 'M':
         risk_score += 5
     
     # Chest pain type
-    cp = float(data.get('cp', 0))
-    if cp == 0:
+    chest_pain = data.get('ChestPainType', '')
+    if chest_pain == 'TA':  # Typical Angina
         risk_score += 20
         risk_factors.append("Typical angina symptoms")
-    elif cp == 1:
+    elif chest_pain == 'ATA':  # Atypical Angina
         risk_score += 10
         risk_factors.append("Atypical chest pain")
+    elif chest_pain == 'ASY':  # Asymptomatic
+        risk_score += 5
     
     # Blood pressure
-    trestbps = float(data.get('trestbps', 0))
-    if trestbps > 140:
+    resting_bp = float(data.get('RestingBP', 0))
+    if resting_bp > 140:
         risk_score += 15
         risk_factors.append("High blood pressure")
-    elif trestbps > 130:
+    elif resting_bp > 130:
         risk_score += 8
     
     # Cholesterol
-    chol = float(data.get('chol', 0))
-    if chol > 240:
+    cholesterol = float(data.get('Cholesterol', 0))
+    if cholesterol > 240:
         risk_score += 15
         risk_factors.append("High cholesterol")
-    elif chol > 200:
+    elif cholesterol > 200:
         risk_score += 8
     
-    # Other factors
-    if float(data.get('fbs', 0)) == 1:
+    # Fasting blood sugar
+    if float(data.get('FastingBS', 0)) == 1:
         risk_score += 10
         risk_factors.append("Elevated fasting blood sugar")
     
-    if float(data.get('exang', 0)) == 1:
+    # ECG abnormalities
+    resting_ecg = data.get('RestingECG', '')
+    if resting_ecg == 'ST':
+        risk_score += 8
+        risk_factors.append("ECG abnormalities")
+    elif resting_ecg == 'LVH':
+        risk_score += 12
+        risk_factors.append("Left ventricular hypertrophy")
+    
+    # Maximum heart rate
+    max_hr = float(data.get('MaxHR', 0))
+    if max_hr < 100:
+        risk_score += 12
+        risk_factors.append("Low maximum heart rate")
+    
+    # Exercise induced angina
+    if data.get('ExerciseAngina') == 'Y':
         risk_score += 15
         risk_factors.append("Exercise-induced chest pain")
     
-    if float(data.get('oldpeak', 0)) > 2:
+    # ST depression
+    oldpeak = float(data.get('Oldpeak', 0))
+    if oldpeak > 2:
         risk_score += 15
         risk_factors.append("Significant ST depression")
+    elif oldpeak > 1:
+        risk_score += 8
     
-    ca = float(data.get('ca', 0))
-    if ca > 0:
-        risk_score += ca * 10
-        risk_factors.append(f"{int(ca)} major vessel(s) with narrowing")
+    # ST slope
+    st_slope = data.get('ST_Slope', '')
+    if st_slope == 'Down':
+        risk_score += 12
+        risk_factors.append("Downsloping ST segment")
+    elif st_slope == 'Flat':
+        risk_score += 6
     
     return {
         'riskScore': min(risk_score, 100),

@@ -64,18 +64,16 @@ A beautiful, interactive web application for heart disease prediction using mach
 The application analyzes the following health parameters:
 
 - **Age**: Your current age
-- **Sex**: Biological sex (male/female)
-- **Chest Pain Type**: Type of chest pain experienced
-- **Resting Blood Pressure**: Blood pressure at rest
-- **Cholesterol Level**: Serum cholesterol level
-- **Fasting Blood Sugar**: Whether fasting blood sugar > 120 mg/dl
-- **Resting ECG**: Results of resting electrocardiogram
-- **Maximum Heart Rate**: Maximum heart rate achieved during exercise
-- **Exercise Induced Angina**: Whether exercise induces chest pain
-- **ST Depression**: ST depression induced by exercise
-- **ST Slope**: Slope of peak exercise ST segment
-- **Major Vessels**: Number of major vessels colored by fluoroscopy
-- **Thalassemia**: Type of thalassemia
+- **Sex**: Biological sex (M/F)
+- **ChestPainType**: Type of chest pain (TA, ATA, NAP, ASY)
+- **RestingBP**: Resting blood pressure
+- **Cholesterol**: Serum cholesterol level
+- **FastingBS**: Whether fasting blood sugar > 120 mg/dl (1/0)
+- **RestingECG**: Results of resting electrocardiogram (Normal, ST, LVH)
+- **MaxHR**: Maximum heart rate achieved during exercise
+- **ExerciseAngina**: Whether exercise induces chest pain (Y/N)
+- **Oldpeak**: ST depression induced by exercise
+- **ST_Slope**: Slope of peak exercise ST segment (Up, Flat, Down)
 
 ## Technical Details
 
@@ -87,21 +85,21 @@ The application analyzes the following health parameters:
 
 ## Model Information
 
-The application uses your pre-trained `model.pkl` file. The model should be trained on the Cleveland Heart Disease dataset or similar with the following features in order:
+The application uses your pre-trained `model.pkl` file. The model should be trained on a heart disease dataset with the following features in order:
 
-1. age
-2. sex
-3. cp (chest pain type)
-4. trestbps (resting blood pressure)
-5. chol (cholesterol)
-6. fbs (fasting blood sugar)
-7. restecg (resting ECG)
-8. thalach (max heart rate)
-9. exang (exercise induced angina)
-10. oldpeak (ST depression)
-11. slope (ST slope)
-12. ca (number of major vessels)
-13. thal (thalassemia)
+1. Age
+2. Sex (M/F)
+3. ChestPainType (TA/ATA/NAP/ASY)
+4. RestingBP (resting blood pressure)
+5. Cholesterol
+6. FastingBS (fasting blood sugar > 120 mg/dl)
+7. RestingECG (Normal/ST/LVH)
+8. MaxHR (max heart rate)
+9. ExerciseAngina (Y/N)
+10. Oldpeak (ST depression)
+11. ST_Slope (Up/Flat/Down)
+
+Target variable: HeartDisease (1/0)
 
 ## Disclaimer
 

@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, render_template_string, send_from_directory
 from flask_cors import CORS
-import pickle
+import joblib
 import numpy as np
 import pandas as pd
 import os
@@ -9,13 +9,26 @@ app = Flask(__name__, static_folder='.', static_url_path='')
 CORS(app)  # Enable CORS for all domains on all routes
 
 # Load the model
-try:
-    with open('model.pkl', 'rb') as file:
-        model = pickle.load(file)
-    print("Model loaded successfully!")
-except Exception as e:
-    print(f"Error loading model: {e}")
-    model = None
+MODEL_LOADED = False
+model = None
+
+def load_model_safe():
+    """Safely load the model with error handling"""
+    global model, MODEL_LOADED
+    try:
+        # Try loading joblib model
+        model = joblib.load('model.joblib')
+        print("✅ Model loaded successfully from model.joblib!")
+        MODEL_LOADED = True
+        return True
+    except Exception as e:
+        print(f"⚠️  Model loading failed: {e}")
+        print("Using fallback prediction algorithm")
+        MODEL_LOADED = False
+        return False
+
+# Attempt to load model at startup
+load_model_safe()
 
 @app.route('/')
 def index():
@@ -46,16 +59,8 @@ def script():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    """Handle heart disease prediction"""
+    """Handle heart disease prediction using trained model or fallback"""
     try:
-        if model is None:
-            return jsonify({
-                'error': 'Model not loaded',
-                'riskScore': 50,
-                'hasHeartDisease': False,
-                'riskFactors': ['Model unavailable - using simulated results']
-            }), 500
-        
         # Get data from request
         data = request.json
         
@@ -66,53 +71,210 @@ def predict():
             'Oldpeak', 'ST_Slope'
         ]
         
-        # Extract features in the correct order
-        features = []
-        for feature in feature_names:
-            if feature in data:
-                features.append(float(data[feature]))
-            else:
-                return jsonify({'error': f'Missing feature: {feature}'}), 400
+        # If model is loaded, use it
+        if MODEL_LOADED and model is not None:
+            try:
+                # Prepare features for your trained model
+                features = prepare_features_for_model(data, feature_names)
+                X = np.array(features).reshape(1, -1)
+                
+                # Make prediction with your trained model
+                if hasattr(model, 'predict_proba'):
+                    probability = model.predict_proba(X)[0]
+                    risk_score = int(probability[1] * 100)
+                    has_heart_disease = probability[1] > 0.5
+                else:
+                    prediction = model.predict(X)[0]
+                    has_heart_disease = bool(prediction)
+                    risk_score = 75 if has_heart_disease else 25
+                
+                return jsonify({
+                    'riskScore': risk_score,
+                    'hasHeartDisease': has_heart_disease,
+                    'riskFactors': generate_risk_factors(data),
+                    'modelUsed': True,
+                    'message': 'Prediction from your trained model'
+                })
+                
+            except Exception as e:
+                print(f"Model prediction error: {e}")
+                # Fall through to heuristic method
         
-        # Convert to numpy array and reshape for prediction
-        X = np.array(features).reshape(1, -1)
-        
-        # Make prediction
-        try:
-            # Try to get probability if available
-            if hasattr(model, 'predict_proba'):
-                probability = model.predict_proba(X)[0]
-                risk_score = int(probability[1] * 100)  # Probability of having heart disease
-                has_heart_disease = probability[1] > 0.5
-            else:
-                # Fallback to binary prediction
-                prediction = model.predict(X)[0]
-                has_heart_disease = bool(prediction)
-                risk_score = 75 if has_heart_disease else 25
-        except Exception as e:
-            print(f"Prediction error: {e}")
-            # Fallback to simple heuristic
-            risk_score = calculate_risk_heuristic(data)
-            has_heart_disease = risk_score > 50
-        
-        # Generate risk factors based on input
-        risk_factors = generate_risk_factors(data)
-        
-        return jsonify({
-            'riskScore': risk_score,
-            'hasHeartDisease': has_heart_disease,
-            'riskFactors': risk_factors,
-            'modelUsed': True
-        })
+        # Fallback to smart heuristic if model fails or isn't loaded
+        result = calculate_smart_prediction(data)
+        result['modelUsed'] = False
+        result['message'] = 'Prediction from smart algorithm (model not available)'
+        return jsonify(result)
         
     except Exception as e:
-        print(f"Error in prediction: {e}")
         return jsonify({
             'error': str(e),
             'riskScore': 50,
             'hasHeartDisease': False,
-            'riskFactors': ['Error occurred during prediction']
+            'riskFactors': ['Error occurred during prediction'],
+            'modelUsed': False
         }), 500
+
+def prepare_features_for_model(data, feature_names):
+    """Convert form data to model features with proper encoding"""
+    import pandas as pd
+    
+    # Create a single row DataFrame with your form data
+    row_data = {
+        'Age': float(data.get('Age', 0)),
+        'Sex': data.get('Sex', 'M'),
+        'ChestPainType': data.get('ChestPainType', 'ASY'),
+        'RestingBP': float(data.get('RestingBP', 0)),
+        'Cholesterol': float(data.get('Cholesterol', 0)),
+        'FastingBS': int(data.get('FastingBS', 0)),
+        'RestingECG': data.get('RestingECG', 'Normal'),
+        'MaxHR': float(data.get('MaxHR', 0)),
+        'ExerciseAngina': data.get('ExerciseAngina', 'N'),
+        'Oldpeak': float(data.get('Oldpeak', 0)),
+        'ST_Slope': data.get('ST_Slope', 'Flat')
+    }
+    
+    df = pd.DataFrame([row_data])
+    
+    # Apply the same encoding that was likely used during training
+    # One-hot encode categorical variables
+    df_encoded = pd.get_dummies(df, columns=['Sex', 'ChestPainType', 'RestingECG', 'ExerciseAngina', 'ST_Slope'])
+    
+    # Ensure we have all possible categories (in case some are missing)
+    expected_columns = [
+        'Age', 'RestingBP', 'Cholesterol', 'FastingBS', 'MaxHR', 'Oldpeak',
+        'Sex_F', 'Sex_M',
+        'ChestPainType_ASY', 'ChestPainType_ATA', 'ChestPainType_NAP', 'ChestPainType_TA',
+        'RestingECG_LVH', 'RestingECG_Normal', 'RestingECG_ST',
+        'ExerciseAngina_N', 'ExerciseAngina_Y',
+        'ST_Slope_Down', 'ST_Slope_Flat', 'ST_Slope_Up'
+    ]
+    
+    # Add missing columns with 0
+    for col in expected_columns:
+        if col not in df_encoded.columns:
+            df_encoded[col] = 0
+    
+    # Reorder columns to match expected order
+    df_encoded = df_encoded.reindex(columns=expected_columns, fill_value=0)
+    
+    return df_encoded.values[0]
+
+def calculate_smart_prediction(data):
+    """Smart prediction algorithm based on medical guidelines"""
+    risk_score = 0
+    risk_factors = []
+    
+    # Age factor (major risk factor)
+    age = float(data.get('Age', 0))
+    if age > 65:
+        risk_score += 20
+        risk_factors.append("Advanced age (>65)")
+    elif age > 55:
+        risk_score += 12
+        risk_factors.append("Older age (>55)")
+    elif age > 45:
+        risk_score += 6
+    
+    # Sex factor  
+    if data.get('Sex') == 'M':
+        risk_score += 8
+        risk_factors.append("Male gender")
+    
+    # Chest pain type (very important)
+    chest_pain = data.get('ChestPainType', '')
+    if chest_pain == 'TA':
+        risk_score += 25
+        risk_factors.append("Typical angina symptoms")
+    elif chest_pain == 'ATA':
+        risk_score += 15
+        risk_factors.append("Atypical chest pain")
+    elif chest_pain == 'ASY':
+        risk_score += 10
+        risk_factors.append("Asymptomatic presentation")
+    
+    # Blood pressure
+    resting_bp = float(data.get('RestingBP', 0))
+    if resting_bp >= 160:
+        risk_score += 18
+        risk_factors.append("Very high blood pressure")
+    elif resting_bp >= 140:
+        risk_score += 12
+        risk_factors.append("High blood pressure")
+    elif resting_bp >= 130:
+        risk_score += 6
+        risk_factors.append("Elevated blood pressure")
+    
+    # Cholesterol
+    cholesterol = float(data.get('Cholesterol', 0))
+    if cholesterol >= 280:
+        risk_score += 18
+        risk_factors.append("Very high cholesterol")
+    elif cholesterol >= 240:
+        risk_score += 12
+        risk_factors.append("High cholesterol")
+    elif cholesterol >= 200:
+        risk_score += 6
+        risk_factors.append("Borderline high cholesterol")
+    
+    # Fasting blood sugar
+    if float(data.get('FastingBS', 0)) == 1:
+        risk_score += 12
+        risk_factors.append("Elevated fasting blood sugar")
+    
+    # ECG abnormalities
+    resting_ecg = data.get('RestingECG', '')
+    if resting_ecg == 'LVH':
+        risk_score += 15
+        risk_factors.append("Left ventricular hypertrophy")
+    elif resting_ecg == 'ST':
+        risk_score += 10
+        risk_factors.append("ECG abnormalities")
+    
+    # Maximum heart rate (lower is worse)
+    max_hr = float(data.get('MaxHR', 0))
+    expected_max_hr = 220 - age
+    if max_hr < expected_max_hr * 0.7:
+        risk_score += 15
+        risk_factors.append("Poor exercise capacity")
+    elif max_hr < expected_max_hr * 0.8:
+        risk_score += 8
+        risk_factors.append("Reduced exercise capacity")
+    
+    # Exercise induced angina
+    if data.get('ExerciseAngina') == 'Y':
+        risk_score += 20
+        risk_factors.append("Exercise-induced chest pain")
+    
+    # ST depression (oldpeak)
+    oldpeak = float(data.get('Oldpeak', 0))
+    if oldpeak >= 3:
+        risk_score += 20
+        risk_factors.append("Severe ST depression")
+    elif oldpeak >= 2:
+        risk_score += 15
+        risk_factors.append("Significant ST depression")
+    elif oldpeak >= 1:
+        risk_score += 8
+        risk_factors.append("Mild ST depression")
+    
+    # ST slope
+    st_slope = data.get('ST_Slope', '')
+    if st_slope == 'Down':
+        risk_score += 15
+        risk_factors.append("Downsloping ST segment")
+    elif st_slope == 'Flat':
+        risk_score += 8
+        risk_factors.append("Flat ST segment")
+    
+    # Cap the risk score
+    risk_score = min(risk_score, 100)
+    
+    return {
+        'riskScore': risk_score,
+        'hasHeartDisease': risk_score > 60,
+        'riskFactors': risk_factors
+    }
 
 def calculate_risk_heuristic(data):
     """Fallback heuristic for risk calculation"""

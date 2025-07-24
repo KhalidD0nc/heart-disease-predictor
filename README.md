@@ -149,30 +149,7 @@ The application uses a beautiful gradient color scheme:
 
 Feel free to submit issues and enhancement requests!
 
-## Deployment
 
-### Easy Deployment Options:
-
-#### 1. **Vercel (Recommended)**
-1. Fork this repository  
-2. Go to [vercel.com](https://vercel.com) and sign up with GitHub  
-3. Click "Import Project" and select this repository  
-4. Deploy automatically! 🚀  
-
-#### 2. **Render**
-1. Fork this repository  
-2. Go to [render.com](https://render.com) and sign up  
-3. Create a new "Web Service" from your GitHub repo  
-4. Render will automatically detect and deploy your Flask app  
-
-#### 3. **GitHub Pages (Static Version)**
-1. Enable GitHub Pages in your repository settings  
-2. Use the `standalone.html` file for a client-side only version  
-
-#### 4. **Heroku**
-1. Install Heroku CLI  
-2. Run: `heroku create your-app-name`  
-3. Run: `git push heroku main`  
 
 ## License
 

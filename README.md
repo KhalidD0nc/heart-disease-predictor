@@ -43,6 +43,8 @@ Recommendations are tailored based on input data to promote heart health and awa
 
 ## Getting Started
 
+https://heart-disease-predictor-sand.vercel.app/
+
 ### Prerequisites
 
 - Python 3.7 or higher  
